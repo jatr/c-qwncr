@@ -21,12 +21,6 @@ Dependencies: none
 		return (typeof fn === 'function');
 	}
 	
-	function logError (msg) {
-		if (console && console.error) {
-			console.error(msg);
-		}
-	}
-	
 	/**
 	 * A locking mechanism that can be used to prevent asynchronous sequences from starting before the previous sequence has completed.
 	 */
@@ -113,7 +107,7 @@ Dependencies: none
 	_public = {
 
 		/**
-		 * Wraps `cq.lock` (see below!) to start an asynchronous sequence.  If there is a lock for the sequence (usually meaning that the previous invocation has not completed), then this function blocks the sequence from beginning.  Blocked sequences are not queued - the method just returns.  This is beneficial because certain logical sequences (animations) must not be started again before being ended completely.
+		 * Wraps `cq.lock` (see above!) to start an asynchronous sequence.  If there is a lock for the sequence (usually meaning that the previous invocation has not completed), then this function blocks the sequence from beginning.  Blocked sequences are not queued - the method just returns.  This is beneficial because certain logical sequences (animations) must not be started again before being ended completely.
 		 * @param {String} sequenceName The name of the sequence.  This usually should, but does not have to, have the same name as the action that it represents.
 		 * @param {Function} sequence The sequence function to invoke.  It will NOT be invoked if the lock has not been lifted (either by calling `cq.lock.unlock()` or `cq.endSequence()`).  You should have a call to `cq.endSequence()` when the function is done.  `sequenceName` is passed as the first parameter to this function as a convenience.
 		 * @param {Boolean} ignoreLock Set this to `true` to start the squence regardless of any locks.
@@ -157,8 +151,6 @@ Dependencies: none
 	
 	// Create the global instance of `cq`...
 	
-	// Inherit from jQuery!  No, let's not do that...
-	//cq.prototype = $;
 	window.cq = new cq();
 	
 	// ...and attach all the public methods.
