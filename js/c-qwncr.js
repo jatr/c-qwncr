@@ -4,13 +4,14 @@
 c-qwncr JavaScript Sequencing Framework
  - Jeremy Kahn    jkahn@vsapartners.com
 
-Dependencies: jQuery, Modernizr
+Dependencies: none
 *******************************************************/
 
 (function (window) {
 
 	// Private vars
 	var locks = {},
+		_lock,
 		cq = function () {},
 		_public,
 		prop;
@@ -25,6 +26,85 @@ Dependencies: jQuery, Modernizr
 			console.error(msg);
 		}
 	}
+	
+	/**
+	 * A locking mechanism that can be used to prevent asynchronous sequences from starting before the previous sequence has completed.
+	 */
+	_lock = {
+		/** 
+		 * Adds a lock to the internal `locks` collection.
+		 * @param {String} lockName Name of the lock.
+		 * @param {Boolean} lockedToStart Whether the lock should be locked to begin with.  Defaults to `false`.
+		 * @returns {Boolean} Whether or not the newly created lock is locked.
+		 */
+		'createLock': function createLock (lockName, lockedToStart) {
+			if (!lockName) {
+				throw 'You need to name this lock!';
+			} else if (locks[lockName]) {
+				throw 'Lock "' + lockName + '" already exists!';
+			} else {
+				locks[lockName] = lockedToStart ? true : false;
+			}
+
+			return this.isLocked(lockName);
+		},
+		
+		/**
+		 * Deletes a lock from the internal `locks` collection.
+		 * @param {String} lockName Name of the lock.
+		 */
+		'destroyLock': function destroyLock (lockName) {
+			return delete locks[lockName];
+		},
+
+		/**
+		 * Activates a lock.
+		 * @param {String} lockName Name of the lock.
+		 */
+		'lock': function lock (lockName) {
+			if (typeof locks[lockName] !== 'boolean') {
+				throw 'lock ' + lockName + ' does not exist';
+			}
+
+			return (locks[lockName] = true);
+		},
+
+		/**
+		 * Deactivates a lock.
+		 * @param {String} lockName Name of the lock.
+		 */
+		'unlock': function unlock (lockName) {
+			if (typeof locks[lockName] !== 'boolean') {
+				throw 'lock ' + lockName + ' does not exist';
+			}
+
+			return (locks[lockName] = false);
+		},
+
+		/**
+		 * Returns whether or not a lock is locked.
+		 * @param {String} lockName Name of the lock.
+		 */
+		'isLocked': function isLocked (lockName) {
+			if (typeof locks[lockName] !== 'boolean') {
+				throw 'lock ' + lockName + ' does not exist';
+			}
+
+			return locks[lockName];
+		},
+
+		/**
+		 * Returns whether or not a lock has been created with `cq.lock.createLock()`.
+		 * @param {String} lockName Name of the lock.
+		 */
+		'lockExists': function lockExists (lockName) {
+			return (typeof locks[lockName] !== 'undefined');
+		},
+		
+		'_debug': function () {
+			return locks;
+		}
+	};
 	
 	
 	/******************************** Private methods */
@@ -44,13 +124,12 @@ Dependencies: jQuery, Modernizr
 				throw 'cq.startSequence: "sequenceName" not provided!';
 			}
 			
-			if (!window.cq.lock.lockExists(sequenceName)) {
-				//logError('cq.startSequence: Lock "' + sequenceName + '" does not exist, making it for you...');
-				window.cq.lock.createLock(sequenceName);
+			if (!_lock.lockExists(sequenceName)) {
+				_lock.createLock(sequenceName);
 			}
 			
-			if (!window.cq.lock.isLocked(sequenceName) || ignoreLock === true) {
-				window.cq.lock.lock(sequenceName);
+			if (!_lock.isLocked(sequenceName) || ignoreLock === true) {
+				_lock.lock(sequenceName);
 				
 				if (isFunc(sequence)) {
 					sequence(sequenceName);
@@ -58,7 +137,6 @@ Dependencies: jQuery, Modernizr
 				
 				return true;
 			} else {
-				//console.log("There is a lock!  And it's not being overridden!");
 				return false;
 			}
 		},
@@ -68,91 +146,12 @@ Dependencies: jQuery, Modernizr
 		 * @param {String} sequenceName The name of the sequence.  This must correspond to the sequenceName provided to `cq.startSequence()`.
 		 */
 		sequenceEnd: function sequenceEnd (sequenceName) {
-			if (!window.cq.lock.lockExists(sequenceName)) {
+			if (!_lock.lockExists(sequenceName)) {
 				throw 'cq.endSequence: "' + sequenceName + '" does not exist!';
 			}
 			
-			window.cq.lock.unlock(sequenceName);
-		},
-
-		/**
-		 * A locking mechanism that can be used to prevent asynchronous actions from starting before the previous sequence has completed.  This is handy for complex animations.  First, create a lock with `cq.lock.createLock()`.  Then lock and unlock it with `cq.lock.lock()` and `cq.lock.unlock()`.  'cq.lock.isLocked()' will tell you if something is locked or not.  You can check if a lock has been made with `cq.lock.lockExists()`.  The use case is to `return` out of the beginning of a function if you want the sequence to be NOT be executed asynchronously.
-		 */
-		lock: {
-			/** 
-			 * Adds a lock to the internal `locks` collection.
-			 * @param {String} lockName Name of the lock.
-			 * @param {Boolean} lockedToStart Whether the lock should be locked to begin with.  Defaults to `false`.
-			 * @returns {Boolean} Whether or not the newly created lock is locked.
-			 */
-			'createLock': function createLock (lockName, lockedToStart) {
-				if (!lockName) {
-					throw 'You need to name this lock!';
-				} else if (locks[lockName]) {
-					throw 'Lock "' + lockName + '" already exists!';
-				} else {
-					locks[lockName] = lockedToStart ? true : false;
-				}
-
-				return this.isLocked(lockName);
-			},
-			
-			/**
-			 * Deletes a lock from the internal `locks` collection.
-			 * @param {String} lockName Name of the lock.
-			 */
-			'destroyLock': function destroyLock (lockName) {
-				return delete locks[lockName];
-			},
-
-			/**
-			 * Activates a lock.
-			 * @param {String} lockName Name of the lock.
-			 */
-			'lock': function lock (lockName) {
-				if (typeof locks[lockName] !== 'boolean') {
-					throw 'lock ' + lockName + ' does not exist';
-				}
-
-				return (locks[lockName] = true);
-			},
-
-			/**
-			 * Deactivates a lock.
-			 * @param {String} lockName Name of the lock.
-			 */
-			'unlock': function unlock (lockName) {
-				if (typeof locks[lockName] !== 'boolean') {
-					throw 'lock ' + lockName + ' does not exist';
-				}
-
-				return (locks[lockName] = false);
-			},
-
-			/**
-			 * Returns whether or not a lock is locked.
-			 * @param {String} lockName Name of the lock.
-			 */
-			'isLocked': function isLocked (lockName) {
-				if (typeof locks[lockName] !== 'boolean') {
-					throw 'lock ' + lockName + ' does not exist';
-				}
-
-				return locks[lockName];
-			},
-
-			/**
-			 * Returns whether or not a lock has been created with `cq.lock.createLock()`.
-			 * @param {String} lockName Name of the lock.
-			 */
-			'lockExists': function lockExists (lockName) {
-				return (typeof locks[lockName] !== 'undefined');
-			},
-			
-			'_debug': function () {
-				return locks;
-			}
-		},
+			_lock.unlock(sequenceName);
+		}
 	};
 	/********************************* Public methods */
 	
