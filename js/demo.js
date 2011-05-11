@@ -13,7 +13,7 @@ $(function (){
 		btn.click(moveDiv);
 		
 		function moveDiv () {
-			cq.sequenceStart('box.move', function (sequenceName) {
+			cq.start('box.move', function (sequenceName) {
 				box
 					.animate({
 						'left': '+=200'
@@ -25,7 +25,7 @@ $(function (){
 					}, {
 						'duration': TRANSITION_DURATION,
 						'complete': function () {
-							cq.sequenceEnd(sequenceName);
+							cq.end(sequenceName);
 						}
 					});
 			});

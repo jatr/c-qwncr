@@ -2,6 +2,8 @@
 
 /*******************************************************
 c-qwncr JavaScript Sequencing Framework
+v. 0.1
+
  - Jeremy Kahn    jkahn@vsapartners.com
 
 Dependencies: none
@@ -10,13 +12,13 @@ Dependencies: none
 (function (window) {
 
 	// Private vars
-	var locks = {},
+	var cq = function () {},
+		locks = {},
 		_lock,
-		cq = function () {},
 		_public,
 		prop;
 	
-	/* Private methods ********************************/
+	/* Private methods & properties *******************/
 	function isFunc (fn) {
 		return (typeof fn === 'function');
 	}
@@ -32,13 +34,7 @@ Dependencies: none
 		 * @returns {Boolean} Whether or not the newly created lock is locked.
 		 */
 		'createLock': function createLock (lockName, lockedToStart) {
-			if (!lockName) {
-				throw 'You need to name this lock!';
-			} else if (locks[lockName]) {
-				throw 'Lock "' + lockName + '" already exists!';
-			} else {
-				locks[lockName] = lockedToStart ? true : false;
-			}
+			locks[lockName] = lockedToStart ? true : false;
 
 			return this.isLocked(lockName);
 		},
@@ -46,6 +42,7 @@ Dependencies: none
 		/**
 		 * Deletes a lock from the internal `locks` collection.
 		 * @param {String} lockName Name of the lock.
+		 * @returns {Boolean} Whether or not the lock was deleted (only returns `false` if the lock didn't exist in the first place).
 		 */
 		'destroyLock': function destroyLock (lockName) {
 			return delete locks[lockName];
@@ -56,11 +53,9 @@ Dependencies: none
 		 * @param {String} lockName Name of the lock.
 		 */
 		'lock': function lock (lockName) {
-			if (typeof locks[lockName] !== 'boolean') {
-				throw 'lock ' + lockName + ' does not exist';
+			if (locks[lockName] !== undefined) {
+				locks[lockName] = true;
 			}
-
-			return (locks[lockName] = true);
 		},
 
 		/**
@@ -68,23 +63,20 @@ Dependencies: none
 		 * @param {String} lockName Name of the lock.
 		 */
 		'unlock': function unlock (lockName) {
-			if (typeof locks[lockName] !== 'boolean') {
-				throw 'lock ' + lockName + ' does not exist';
+			if (locks[lockName] !== undefined) {
+				locks[lockName] = false;
 			}
-
-			return (locks[lockName] = false);
 		},
 
 		/**
 		 * Returns whether or not a lock is locked.
 		 * @param {String} lockName Name of the lock.
+		 * @returns {Boolean|undefined} If the lock does not exist, `undefined` is returned.
 		 */
 		'isLocked': function isLocked (lockName) {
-			if (typeof locks[lockName] !== 'boolean') {
-				throw 'lock ' + lockName + ' does not exist';
+			if (typeof locks[lockName] === 'boolean') {
+				return locks[lockName];
 			}
-
-			return locks[lockName];
 		},
 
 		/**
@@ -92,28 +84,24 @@ Dependencies: none
 		 * @param {String} lockName Name of the lock.
 		 */
 		'lockExists': function lockExists (lockName) {
-			return (typeof locks[lockName] !== 'undefined');
-		},
-		
-		'_debug': function () {
-			return locks;
+			return (locks[lockName] !== undefined);
 		}
 	};
 	
 	
-	/******************************** Private methods */
+	/******************* Private methods & properties */
 	
 	/* Public methods *********************************/
 	_public = {
 
 		/**
-		 * Wraps `cq.lock` (see above!) to start an asynchronous sequence.  If there is a lock for the sequence (usually meaning that the previous invocation has not completed), then this function blocks the sequence from beginning.  Blocked sequences are not queued - the method just returns.  This is beneficial because certain logical sequences (animations) must not be started again before being ended completely.
-		 * @param {String} sequenceName The name of the sequence.  This usually should, but does not have to, have the same name as the action that it represents.
-		 * @param {Function} sequence The sequence function to invoke.  It will NOT be invoked if the lock has not been lifted (either by calling `cq.lock.unlock()` or `cq.endSequence()`).  You should have a call to `cq.endSequence()` when the function is done.  `sequenceName` is passed as the first parameter to this function as a convenience.
-		 * @param {Boolean} ignoreLock Set this to `true` to start the squence regardless of any locks.
+		 * Creates an asynchronous sequence and activates a corresponding "lock."  If there is already a lock for a sequence with the same name (usually meaning that the previous invocation has not completed), then this function blocks the sequence from beginning.  Blocked sequences are not queued - this method just returns.  This is beneficial because certain logical sequences (such as complex animations) must not be started again before being ended completely.
+		 * @param {String} sequenceName The name of the sequence.  This is the identifier for the sequence, and will be needed to end the sequence.
+		 * @param {Function} sequence The sequence function to invoke.  It will NOT be invoked if the lock has not been lifted (by calling `cq.end()`).  You should have a call to `cq.end()` when the function is done.  The `sequenceName` value is passed as the first parameter to the callback function as a convenience.
+		 * @param {Boolean} ignoreLock Set this to `true` to start the sequence regardless of any locks.
 		 * @returns {Boolean} Whether or not the sequence was started. (`true` if it was, `false` if it was not).
 		 */
-		sequenceStart: function sequenceStart (sequenceName, sequence, ignoreLock) {
+		start: function start (sequenceName, sequence, ignoreLock) {
 			if (!sequenceName) {
 				throw 'cq.startSequence: "sequenceName" not provided!';
 			}
@@ -136,12 +124,12 @@ Dependencies: none
 		},
 		
 		/**
-		 * Ends a sequence.  Calling this removes the corresponding lock and allows the sequence to be run again.
-		 * @param {String} sequenceName The name of the sequence.  This must correspond to the sequenceName provided to `cq.startSequence()`.
+		 * Ends a sequence.  Calling this removes the lock and allows the sequence to be run again.
+		 * @param {String} sequenceName The name of the sequence.  This must correspond to the `sequenceName` provided to `cq.start()`.
 		 */
-		sequenceEnd: function sequenceEnd (sequenceName) {
+		end: function end (sequenceName) {
 			if (!_lock.lockExists(sequenceName)) {
-				throw 'cq.endSequence: "' + sequenceName + '" does not exist!';
+				throw 'Error:  Calling cq.end() on ' + sequenceName + ', which does not exist.';
 			}
 			
 			_lock.unlock(sequenceName);
