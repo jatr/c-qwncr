@@ -19,8 +19,8 @@ The awesome solution:
 A better way to handle this is to use a tool that does all this ugly and annoying logic for you.  C-qwncr is that utility.
 
 The two functions you need to be aware of are:
-  * `cq.start()`
-  * `cq.end()`
+* `cq.start()`
+* `cq.end()`
 
 cq.start( sequenceName, sequence, ignoreLock )
 ---
