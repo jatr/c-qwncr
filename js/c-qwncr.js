@@ -103,7 +103,7 @@ Dependencies: none
 		 */
 		start: function start (sequenceName, sequence, ignoreLock) {
 			if (!sequenceName) {
-				throw 'cq.startSequence: "sequenceName" not provided!';
+				throw 'cq.start: "sequenceName" not provided!';
 			}
 			
 			if (!_lock.lockExists(sequenceName)) {
