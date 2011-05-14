@@ -16,7 +16,7 @@ And then do something like this for every animation on your page.
 The awesome solution:
 ---
 
-A better way to handle this is to use a tool that does all this ugly and annoying logic for you.  C-qwncr is that utility.
+A better way to handle this is to use a tool that does all this ugly and annoying logic for you.  C-qwncr is that tool.
 
 The two functions you need to be aware of are:
 
