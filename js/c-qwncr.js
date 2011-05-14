@@ -3,6 +3,7 @@
 /*******************************************************
 c-qwncr JavaScript Sequencing Framework
 v. 0.1
+MIT License.
 
  - Jeremy Kahn    jkahn@vsapartners.com
 
