@@ -1,8 +1,6 @@
-/*global console:true, window:true */
-
 /*******************************************************
 c-qwncr JavaScript Sequencing Framework
-v. 0.1
+v. 0.2
 MIT License.
 
  - Jeremy Kahn    jkahn@vsapartners.com
@@ -10,11 +8,12 @@ MIT License.
 Dependencies: none
 *******************************************************/
 
-(function (window) {
+(function (global) {
 
 	// Private vars
 	var cq = function () {},
 		locks = {},
+		savedSequences = {},
 		_lock,
 		_public,
 		prop;
@@ -107,6 +106,12 @@ Dependencies: none
 				throw 'cq.start: "sequenceName" not provided!';
 			}
 			
+			if (savedSequences.hasOwnProperty(sequenceName)) {
+				// `ignoreLock` might still be used, so move that to the third param
+				ignoreLock = !!sequence;
+				sequence = savedSequences[sequenceName];
+			}
+			
 			if (!_lock.lockExists(sequenceName)) {
 				_lock.createLock(sequenceName);
 			}
@@ -134,19 +139,29 @@ Dependencies: none
 			}
 			
 			_lock.unlock(sequenceName);
+			_lock.destroyLock(sequenceName);
+		},
+		
+		save: function save (sequenceName, sequence) {
+			return (savedSequences[sequenceName] = sequence);
+		},
+		
+		destroy: function destroy (sequenceName) {
+			_lock.destroyLock(sequenceName);
+			delete savedSequences[sequenceName];
 		}
 	};
 	/********************************* Public methods */
 	
 	// Create the global instance of `cq`...
 	
-	window.cq = new cq();
+	global.cq = new cq();
 	
 	// ...and attach all the public methods.
 	for (prop in _public) {
 		if (_public.hasOwnProperty(prop)) {
-			window.cq[prop] = _public[prop];
+			global.cq[prop] = _public[prop];
 		}
 	}
 	
-}(window));
+}(this));
