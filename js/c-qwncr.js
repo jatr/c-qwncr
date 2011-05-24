@@ -142,10 +142,20 @@ Dependencies: none
 			_lock.destroyLock(sequenceName);
 		},
 		
+		/**
+		 * Saves a sequence function that can be used at a later time.  You can use it as many times as you'd like.  Calling this again for a previously used `sequenceName` will just overwrite the old one.
+		 * @param {String} sequenceName The name of the sequence.  This is the identifier by which other methods like `destroy()` and `start()` will access it.
+		 * @param {Function} sequence The sequence function itself.  The first parameter that is passed to this function is the string that was passed as `sequenceName`.
+		 * @returns {Function} Whatever function that was passed as `sequence`.
+		 */
 		save: function save (sequenceName, sequence) {
 			return (savedSequences[sequenceName] = sequence);
 		},
 		
+		/**
+		 * Destroys a saved sequence.
+		 * @param {String} sequenceName The identifier string of the sequence to remove.
+		 */
 		destroy: function destroy (sequenceName) {
 			_lock.destroyLock(sequenceName);
 			delete savedSequences[sequenceName];
