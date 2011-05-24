@@ -73,6 +73,8 @@ cq.start('moveMyElement', function (sequenceName) {
 });
 ````
 
+For more flexibility in your sequencing, you can save sequence functions and `start()` whenever you need them:
+
 save ( sequenceName, sequence )
 ---
 
